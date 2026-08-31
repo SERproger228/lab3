@@ -36,9 +36,9 @@ void TestPushBack(){
     deque.PushBack(3);
 
     Check(deque.GetLength() == 3, "TestPushBack length");
-    Check(deque.Get(0) == 1, "TestPushBack Get(0)");
-    Check(deque.Get(1) == 2, "TestPushBack Get(1)");
-    Check(deque.Get(2) == 3, "TestPushBack Get(2)");
+    Check(SegmentedDequeTestAccess<int>::GetItem(deque, 0) == 1, "TestPushBack item access(0)");
+    Check(SegmentedDequeTestAccess<int>::GetItem(deque, 1) == 2, "TestPushBack item access(1)");
+    Check(SegmentedDequeTestAccess<int>::GetItem(deque, 2) == 3, "TestPushBack item access(2)");
 }
 
 void TestPushFront(){
@@ -50,9 +50,9 @@ void TestPushFront(){
     deque.PushFront(3);
 
     Check(deque.GetLength() == 3, "TestPushFront length");
-    Check(deque.Get(0) == 3, "TestPushFront Get(0)");
-    Check(deque.Get(1) == 2, "TestPushFront Get(1)");
-    Check(deque.Get(2) == 1, "TestPushFront Get(2)");
+    Check(SegmentedDequeTestAccess<int>::GetItem(deque, 0) == 3, "TestPushFront item access(0)");
+    Check(SegmentedDequeTestAccess<int>::GetItem(deque, 1) == 2, "TestPushFront item access(1)");
+    Check(SegmentedDequeTestAccess<int>::GetItem(deque, 2) == 1, "TestPushFront item access(2)");
 }
 
 void TestPopBack(){
@@ -65,8 +65,8 @@ void TestPopBack(){
     int thirdPop = deque.PopBack();
 
     Check(deque.GetLength()==2, "TestPopBack lenght");
-    Check(deque.Get(0)==1, "TestPopBack Get(0)");
-    Check(deque.Get(1)==2, "TestPopBack Get(1)");
+    Check(SegmentedDequeTestAccess<int>::GetItem(deque, 0)==1, "TestPopBack item access(0)");
+    Check(SegmentedDequeTestAccess<int>::GetItem(deque, 1)==2, "TestPopBack item access(1)");
     Check(firsPop==5, "TestPopBack firstPop");
     Check(secondPop==4, "TestPopBack secondPop");
     Check(thirdPop==3, "TestPopBack thirdPop");
@@ -81,8 +81,8 @@ void TestPopFront(){
     int thirdPop = deque.PopFront();
 
     Check(deque.GetLength()==2, "TestPopFront lenght");
-    Check(deque.Get(0)==4, "TestPopFront Get(0)");
-    Check(deque.Get(1)==5, "TestPopFront Get(1)");
+    Check(SegmentedDequeTestAccess<int>::GetItem(deque, 0)==4, "TestPopFront item access(0)");
+    Check(SegmentedDequeTestAccess<int>::GetItem(deque, 1)==5, "TestPopFront item access(1)");
     Check(firsPop==1, "TestPopFront firstPop");
     Check(secondPop==2, "TestPopFront secondPop");
     Check(thirdPop==3, "TestPopFront thirdPop");
@@ -119,60 +119,33 @@ void TestPopBackEmpty(){
 
 }
 
-void TestsGet(){
+void TestsInternalItemAccess(){
     
     int item[]={1,2,3,4};
     SegmentedDeque<int> deque(item, 4, 2);
 
-    Check(deque.Get(0)==1, "TestsGet Get(0)");
-    Check(deque.Get(3)==4, "TestsGet Get(lenght-1)");
+    Check(SegmentedDequeTestAccess<int>::GetItem(deque, 0)==1, "TestsInternalItemAccess item access(0)");
+    Check(SegmentedDequeTestAccess<int>::GetItem(deque, 3)==4, "TestsInternalItemAccess item access(lenght-1)");
 
     bool thrown = false;
     try{
-        deque.Get(-1);
+        SegmentedDequeTestAccess<int>::GetItem(deque, -1);
     }
     catch(const IndexOutOfRange&){
         thrown = true;
     }
-    Check(thrown, "TestsGet Get(-1)");
+    Check(thrown, "TestsInternalItemAccess item access(-1)");
 
     thrown = false;
     try{
-        deque.Get(4);
+        SegmentedDequeTestAccess<int>::GetItem(deque, 4);
     }
     catch(const IndexOutOfRange&){
         thrown = true;
     }
-    Check(thrown, "TestsGet Get(lenght)");
+    Check(thrown, "TestsInternalItemAccess item access(lenght)");
 
 
-}
-
-void TestsSet(){
-    int item[]={1,2,3,4,5};
-    SegmentedDeque<int> deque(item,5,2);
-
-    deque.Set(13,3);
-    Check(deque.Get(3)==13, "TestsSet Set(n)");
-    Check(deque.Get(2) == 3, "TestSet left unchanged");
-    Check(deque.Get(4) == 5, "TestSet right unchanged");
-    bool thrown = false;
-    try{
-        deque.Set(13,-1);
-    }
-    catch(const IndexOutOfRange&){
-        thrown = true;
-    }
-    Check(thrown, "TestsSet Set(-1)");
-
-    thrown = false;
-    try{
-        deque.Set(13, 5);
-    }
-    catch(const IndexOutOfRange&){
-        thrown = true;
-    }
-    Check(thrown, "TestsSet Set(lenght)");
 }
 
 void TestCopyConstructor()
@@ -181,8 +154,8 @@ int item[]={1,2,3,4,5};
 SegmentedDeque<int> original(item, 5, 2);
 SegmentedDeque<int> copy(original);
 Check(copy==original, "TestCopyConstructor check copy");
-copy.Set(13,2);
-Check(copy.Get(2)!=original.Get(2), "TestCopyConstructor check copy set");
+copy.PushBack(13);
+Check(copy.GetLength()!=original.GetLength(), "TestCopyConstructor copy changes independently");
 }
 
 void TestAssignmentOperator(){
@@ -193,8 +166,8 @@ void TestAssignmentOperator(){
 
     copy=original;
     Check(copy==original, "TestAssignmentOperator correct copy");
-    copy.Set(99, 2);
-    Check(copy.Get(2)!=original.Get(2), "TestAssignmentOperator check copy set");
+    copy.PushBack(99);
+    Check(copy.GetLength()!=original.GetLength(), "TestAssignmentOperator copy changes independently");
 
 }
 
@@ -266,11 +239,11 @@ void TestCompexChain(){
     int b[] = {6,7,8};
     int c[] = {1,2,3,4,5,6,7,8};
     int d[] = {3,4,5,6};
-    int e[] = {3,99,5,6,1,2,3,4,5};
+    int e[] = {3,4,5,6,99,1,2,3,4,5};
 
     SegmentedDeque<int> cRef(c,8,2);
     SegmentedDeque<int> dRef(d, 4, 2);
-    SegmentedDeque<int> eRef(e,9,2);
+    SegmentedDeque<int> eRef(e,10,2);
 
 
     
@@ -283,9 +256,9 @@ void TestCompexChain(){
     SegmentedDeque<int>* D = C->GetSubsequence(2, 5);
     Check(*D==dRef, "TestComplexChain GetSubsequence");
 
-    D->Set(99, 1);
-    Check(*C==cRef, "TestComplexChain correct set for C");
-    Check(D->Get(1)==99, "TestComplexChain correct set for D");
+    D->PushBack(99);
+    Check(*C==cRef, "TestComplexChain source unchanged after D modification");
+    Check(SegmentedDequeTestAccess<int>::GetItem(*D, 4)==99, "TestComplexChain D modified independently");
 
     
     SegmentedDeque<int>* E = D->Concat(A);
@@ -312,7 +285,7 @@ void TestMapWhereReduce(){
     Check(*mapped == mappedReference, "TestMapWhereReduce Map");
     Check(*filtered == filteredReference, "TestMapWhereReduce Where");
     Check(reduced == 15, "TestMapWhereReduce Reduce");
-    Check(deque.Get(0) == 1 && deque.Get(4) == 5, "TestMapWhereReduce source unchanged");
+    Check(SegmentedDequeTestAccess<int>::GetItem(deque, 0) == 1 && SegmentedDequeTestAccess<int>::GetItem(deque, 4) == 5, "TestMapWhereReduce source unchanged");
 
     delete mapped;
     delete filtered;
@@ -328,7 +301,7 @@ void TestSort(){
     SegmentedDeque<int>* sorted = deque.Sort(TestLess);
 
     Check(*sorted == refDeque, "TestSort ascending");
-    Check(deque.Get(0) == 5 && deque.Get(1) == 1, "TestSort source unchanged");
+    Check(SegmentedDequeTestAccess<int>::GetItem(deque, 0) == 5 && SegmentedDequeTestAccess<int>::GetItem(deque, 1) == 1, "TestSort source unchanged");
 
     delete sorted;
 }
@@ -360,7 +333,7 @@ void TestListBacking(){
     Check(deque.GetLength() == 9, "TestListBacking length");
     Check(deque.GetFirst() == 0, "TestListBacking first");
     Check(deque.GetLast() == 8, "TestListBacking last");
-    Check(deque.Get(4) == 4, "TestListBacking middle");
+    Check(SegmentedDequeTestAccess<int>::GetItem(deque, 4) == 4, "TestListBacking middle");
 }
 
 void TestInvalidArguments(){
@@ -437,7 +410,7 @@ void TestDoubleSegmentMapExpansion(){
         "TestDoubleSegmentMapExpansion first expansion after centered start"
     );
     Check(deque.GetLength() == 4, "TestDoubleSegmentMapExpansion length after first expansion");
-    Check(deque.Get(0) == 1 && deque.Get(3) == 4, "TestDoubleSegmentMapExpansion items after first expansion");
+    Check(SegmentedDequeTestAccess<int>::GetItem(deque, 0) == 1 && SegmentedDequeTestAccess<int>::GetItem(deque, 3) == 4, "TestDoubleSegmentMapExpansion items after first expansion");
 
     deque.PushBack(5);
 
@@ -445,7 +418,7 @@ void TestDoubleSegmentMapExpansion(){
 
     Check(newMapSize == initalMapSize * 2, "TestDoubleSegmentMapExpansion no second expansion yet");
     Check(deque.GetLength() == 5, "TestDoubleSegmentMapExpansion length after fifth item");
-    Check(deque.Get(0) == 1 && deque.Get(4) == 5, "TestDoubleSegmentMapExpansion items after fifth item");
+    Check(SegmentedDequeTestAccess<int>::GetItem(deque, 0) == 1 && SegmentedDequeTestAccess<int>::GetItem(deque, 4) == 5, "TestDoubleSegmentMapExpansion items after fifth item");
 
     for(int i=0; i<4; i++){
         deque.PushFront(i*-1);
@@ -463,7 +436,7 @@ void TestDoubleSegmentMapExpansion(){
 
     Check(newNewMapSize == newMapSize * 2, "TestDoubleSegmentMapExpansion second expansion");
     Check(deque.GetLength() == 11, "TestDoubleSegmentMapExpansion length after second expansion");
-    Check(deque.Get(0) == -5 && deque.Get(10) == 5, "TestDoubleSegmentMapExpansion items after second expansion");
+    Check(SegmentedDequeTestAccess<int>::GetItem(deque, 0) == -5 && SegmentedDequeTestAccess<int>::GetItem(deque, 10) == 5, "TestDoubleSegmentMapExpansion items after second expansion");
 
 }
 
@@ -493,7 +466,7 @@ void TestInternalIndexesAfterPushes(){
     Check(SegmentedDequeTestAccess<int>::GetFrontSegmentIndex(deque) == 0, "TestInternalIndexesAfterPushes front index moves left after first segment fills");
     Check(SegmentedDequeTestAccess<int>::HasSegmentAt(deque, 1), "TestInternalIndexesAfterPushes first segment exists");
     Check(SegmentedDequeTestAccess<int>::HasSegmentAt(deque, 2), "TestInternalIndexesAfterPushes back segment exists");
-    Check(deque.Get(0) == -1 && deque.Get(4) == 3, "TestInternalIndexesAfterPushes data order");
+    Check(SegmentedDequeTestAccess<int>::GetItem(deque, 0) == -1 && SegmentedDequeTestAccess<int>::GetItem(deque, 4) == 3, "TestInternalIndexesAfterPushes data order");
 }
 
 void TestInternalIndexesAfterPops(){
@@ -528,7 +501,7 @@ void TestInternalExpansionKeepsCenteredSegments(){
     Check(SegmentedDequeTestAccess<int>::GetSegmentMapSize(deque) == 6, "TestInternalExpansionKeepsCenteredSegments map size after back expansion");
     Check(SegmentedDequeTestAccess<int>::GetFrontSegmentIndex(deque) == 2, "TestInternalExpansionKeepsCenteredSegments shifted front after back expansion");
     Check(SegmentedDequeTestAccess<int>::GetBackSegmentIndex(deque) == 4, "TestInternalExpansionKeepsCenteredSegments shifted back after back expansion");
-    Check(deque.Get(0) == 1 && deque.Get(4) == 5, "TestInternalExpansionKeepsCenteredSegments data after back expansion");
+    Check(SegmentedDequeTestAccess<int>::GetItem(deque, 0) == 1 && SegmentedDequeTestAccess<int>::GetItem(deque, 4) == 5, "TestInternalExpansionKeepsCenteredSegments data after back expansion");
 
     deque.PushFront(0);
     deque.PushFront(-1);
@@ -540,7 +513,7 @@ void TestInternalExpansionKeepsCenteredSegments(){
     Check(SegmentedDequeTestAccess<int>::GetSegmentMapSize(deque) == 12, "TestInternalExpansionKeepsCenteredSegments map size after front expansion");
     Check(SegmentedDequeTestAccess<int>::GetFrontSegmentIndex(deque) == 2, "TestInternalExpansionKeepsCenteredSegments shifted front after front expansion");
     Check(SegmentedDequeTestAccess<int>::GetBackSegmentIndex(deque) == 7, "TestInternalExpansionKeepsCenteredSegments shifted back after front expansion");
-    Check(deque.Get(0) == -5 && deque.Get(10) == 5, "TestInternalExpansionKeepsCenteredSegments data after front expansion");
+    Check(SegmentedDequeTestAccess<int>::GetItem(deque, 0) == -5 && SegmentedDequeTestAccess<int>::GetItem(deque, 10) == 5, "TestInternalExpansionKeepsCenteredSegments data after front expansion");
 }
 
 void TestFirstPushBackKeepsInitialSegmentCentered(){
@@ -559,10 +532,10 @@ void TestFirstPushBackKeepsInitialSegmentCentered(){
     deque.PushBack(20);
     deque.PushFront(1);
 
-    Check(deque.Get(0) == 1, "TestFirstPushBackKeepsInitialSegmentCentered Get(0)");
-    Check(deque.Get(1) == 5, "TestFirstPushBackKeepsInitialSegmentCentered Get(1)");
-    Check(deque.Get(2) == 10, "TestFirstPushBackKeepsInitialSegmentCentered Get(2)");
-    Check(deque.Get(3) == 20, "TestFirstPushBackKeepsInitialSegmentCentered Get(3)");
+    Check(SegmentedDequeTestAccess<int>::GetItem(deque, 0) == 1, "TestFirstPushBackKeepsInitialSegmentCentered item access(0)");
+    Check(SegmentedDequeTestAccess<int>::GetItem(deque, 1) == 5, "TestFirstPushBackKeepsInitialSegmentCentered item access(1)");
+    Check(SegmentedDequeTestAccess<int>::GetItem(deque, 2) == 10, "TestFirstPushBackKeepsInitialSegmentCentered item access(2)");
+    Check(SegmentedDequeTestAccess<int>::GetItem(deque, 3) == 20, "TestFirstPushBackKeepsInitialSegmentCentered item access(3)");
     Check(SegmentedDequeTestAccess<int>::GetFrontSegmentIndex(deque) == middleIndex,
           "TestFirstPushBackKeepsInitialSegmentCentered no front segment yet");
     Check(SegmentedDequeTestAccess<int>::GetBackSegmentIndex(deque) == middleIndex,
@@ -583,8 +556,8 @@ void TestFirstPushFrontKeepsInitialSegmentCentered(){
 
     deque.PushBack(20);
 
-    Check(deque.Get(0) == 10, "TestFirstPushFrontKeepsInitialSegmentCentered Get(0)");
-    Check(deque.Get(1) == 20, "TestFirstPushFrontKeepsInitialSegmentCentered Get(1)");
+    Check(SegmentedDequeTestAccess<int>::GetItem(deque, 0) == 10, "TestFirstPushFrontKeepsInitialSegmentCentered item access(0)");
+    Check(SegmentedDequeTestAccess<int>::GetItem(deque, 1) == 20, "TestFirstPushFrontKeepsInitialSegmentCentered item access(1)");
     Check(SegmentedDequeTestAccess<int>::GetBackSegmentIndex(deque) == middleIndex,
           "TestFirstPushFrontKeepsInitialSegmentCentered uses right space");
 }
@@ -605,7 +578,7 @@ void TestNewEdgeSegmentsKeepTheirFillDirection(){
           "TestNewEdgeSegmentsKeepTheirFillDirection front starts at right edge");
     Check(SegmentedDequeTestAccess<int>::GetSegmentCount(frontDeque, newFrontIndex) == 1,
           "TestNewEdgeSegmentsKeepTheirFillDirection front count");
-    Check(frontDeque.Get(0) == 0 && frontDeque.Get(4) == 20,
+    Check(SegmentedDequeTestAccess<int>::GetItem(frontDeque, 0) == 0 && SegmentedDequeTestAccess<int>::GetItem(frontDeque, 4) == 20,
           "TestNewEdgeSegmentsKeepTheirFillDirection front order");
 
     SegmentedDeque<int> backDeque(4);
@@ -623,7 +596,7 @@ void TestNewEdgeSegmentsKeepTheirFillDirection(){
           "TestNewEdgeSegmentsKeepTheirFillDirection back starts at left edge");
     Check(SegmentedDequeTestAccess<int>::GetSegmentCount(backDeque, newBackIndex) == 1,
           "TestNewEdgeSegmentsKeepTheirFillDirection back count");
-    Check(backDeque.Get(0) == 1 && backDeque.Get(4) == 30,
+    Check(SegmentedDequeTestAccess<int>::GetItem(backDeque, 0) == 1 && SegmentedDequeTestAccess<int>::GetItem(backDeque, 4) == 30,
           "TestNewEdgeSegmentsKeepTheirFillDirection back order");
 }
 
@@ -655,8 +628,7 @@ void RunAllTests()
     TestPopFrontEmpty();
     TestPopBackEmpty();
 
-    TestsGet();
-    TestsSet();
+    TestsInternalItemAccess();
 
     TestCopyConstructor();
     TestAssignmentOperator();

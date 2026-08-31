@@ -16,7 +16,7 @@ template<class T>
 class SegmentedDequeTestAccess;
 
 template<class T>
-class SegmentedDeque : public ICollection<T>
+class SegmentedDeque
 {
     friend class SegmentedDequeTestAccess<T>;
 
@@ -52,12 +52,12 @@ private:
 
         void MoveFirstToMid();
 
-        T Get(int index) const;
+        T At(int index) const;
 
         T GetFirst() const;
         T GetLast() const;
 
-        void Set(T item, int index);
+        void Put(T item, int index);
 
         void PushFront(T item);
         void PushBack(T item);
@@ -94,6 +94,8 @@ private:
     void EnsureFrontSegmentsCapacity();
     void EnsureBackSegmentsCapacity();
 
+    T GetItem(int index) const;
+    void SetItem(T item, int index);
 
 public:
 
@@ -129,19 +131,14 @@ public:
     T GetFirst() const;
     T GetLast() const;
 
-    T Get(int index) const override;
-    
-    void Set(T item, int index);
-
-
     int GetLength() const;
-    int GetCount() const override { return GetLength(); }
+    int GetCount() const { return GetLength(); }
 
     bool IsEmpty() const;
 
 
     SegmentedDeque<T>* Concat(
-        const ICollection<T>& other
+        const SegmentedDeque<T>& other
     ) const;
 
 
@@ -171,15 +168,14 @@ public:
     ) const;
 
     int FindSubsequence(
-       const ICollection<T>& subsequence
+       const SegmentedDeque<T>& subsequence
     ) const;
 
     SegmentedDeque<T>* Merge(
-      const ICollection<T>& other,
+      const SegmentedDeque<T>& other,
       bool (*compare)(T, T)
     ) const;
 
-    T operator[](int index) const;
     bool operator==(const SegmentedDeque<T>& other) const;
     bool operator!=(const SegmentedDeque<T>& other) const;
     SegmentedDeque<T>& operator=(const SegmentedDeque<T>& other);

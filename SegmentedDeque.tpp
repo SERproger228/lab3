@@ -2,7 +2,6 @@
 
 #include "SegmentedDeque.h"
 #include "exseptions.h"
-#include "ICollection.h"
 
 template<class T>
 SegmentedDeque<T>::Segment::Segment(int segmentSize)
@@ -78,7 +77,7 @@ int SegmentedDeque<T>::Segment::GetCount() const
 }
 
 template<class T>
-T SegmentedDeque<T>::Segment::Get(int index) const
+T SegmentedDeque<T>::Segment::At(int index) const
 {
     if (index < 0 || index >= count)
         throw IndexOutOfRange();
@@ -105,7 +104,7 @@ T SegmentedDeque<T>::Segment::GetLast() const
 }
 
 template<class T>
-void SegmentedDeque<T>::Segment::Set(T item, int index){
+void SegmentedDeque<T>::Segment::Put(T item, int index){
    if (index<0 || index>=count) throw IndexOutOfRange();
 
    data->Set(first + index, item);
@@ -451,34 +450,34 @@ T SegmentedDeque<T>::GetLast() const
 }
 
 template<class T>
-T SegmentedDeque<T>::Get(int index) const
+T SegmentedDeque<T>::GetItem(int index) const
 {
     if (index < 0 || index >= length)
         throw IndexOutOfRange();
 
     Segment* frontSegment = GetFrontSegment();
-    if (index < frontSegment->GetCount()) return frontSegment->Get(index);
+    if (index < frontSegment->GetCount()) return frontSegment->At(index);
     index = index - frontSegment->GetCount();
     int segmentIndex = frontSegmentIndex + index / segmentSize + 1;
     int getIndex = index % segmentSize;
-    return segments->Get(segmentIndex)->Get(getIndex);
+    return segments->Get(segmentIndex)->At(getIndex);
 
 }
 
 template<class T>
-void SegmentedDeque<T>::Set(T item, int index){
+void SegmentedDeque<T>::SetItem(T item, int index){
     if (index < 0 || index >= length) throw IndexOutOfRange(); 
     
     Segment* frontSegment = GetFrontSegment();
     if (index < frontSegment->GetCount()){
-        frontSegment->Set(item, index);
+        frontSegment->Put(item, index);
         return;
     }
     index -= frontSegment->GetCount();
     int setSegmentIndex = frontSegmentIndex + index/segmentSize + 1;
     int setIndex = index % segmentSize; 
     Segment* segment = segments->Get(setSegmentIndex);
-    segment->Set(item, setIndex);
+    segment->Put(item, setIndex);
 }
 
 template<class T>
@@ -496,12 +495,12 @@ bool SegmentedDeque<T>::IsEmpty() const
 template<class T>
 SegmentedDeque<T>*
 SegmentedDeque<T>::Concat(
-    const ICollection<T>& other
+    const SegmentedDeque<T>& other
 ) const
 {
    SegmentedDeque<T>* result = new SegmentedDeque<T>(*this);
-   for (int i=0; i<other.GetCount(); i++)
-      result->PushBack(other.Get(i));
+   for (int i=0; i<other.GetLength(); i++)
+      result->PushBack(other.GetItem(i));
    
    return result;
 }
@@ -520,7 +519,7 @@ SegmentedDeque<T>::GetSubsequence(
         new SegmentedDeque<T>(segmentSize, backing);
 
     for (int i = startIndex; i <= endIndex; i++)
-        result->PushBack(Get(i));
+        result->PushBack(GetItem(i));
 
     return result;
 }
@@ -538,7 +537,7 @@ SegmentedDeque<T>::Map(
         new SegmentedDeque<T>(segmentSize, backing);
 
     for (int i = 0; i < length; i++)
-        result->PushBack(function(Get(i)));
+        result->PushBack(function(GetItem(i)));
 
     return result;
 }
@@ -557,7 +556,7 @@ SegmentedDeque<T>::Where(
 
     for (int i = 0; i < length; i++)
     {
-        T item = Get(i);
+        T item = GetItem(i);
 
         if (predicate(item))
             result->PushBack(item);
@@ -578,7 +577,7 @@ T SegmentedDeque<T>::Reduce(
     T result = initial;
 
     for (int i = 0; i < length; i++)
-        result = function(Get(i), result);
+        result = function(GetItem(i), result);
 
     return result;
 }
@@ -595,11 +594,11 @@ SegmentedDeque<T>::Sort(
         SegmentedDeque<T>* result = new SegmentedDeque<T>(*this);
         for (int i = 0; i<length-1; i++){
             for(int j=0; j<length-1-i; j++){
-                if(compare(result->Get(j+1), result->Get(j))){
-                    T copy = result->Get(j+1);
+                if(compare(result->GetItem(j+1), result->GetItem(j))){
+                    T copy = result->GetItem(j+1);
                     
-                    result->Set(result->Get(j), j+1);
-                    result->Set(copy, j);
+                    result->SetItem(result->GetItem(j), j+1);
+                    result->SetItem(copy, j);
                     }
             }
         }
@@ -607,15 +606,15 @@ SegmentedDeque<T>::Sort(
 }
 
 template<class T>
-int SegmentedDeque<T>::FindSubsequence(const ICollection<T>& subsequence) const{
-    int count = subsequence.GetCount();
+int SegmentedDeque<T>::FindSubsequence(const SegmentedDeque<T>& subsequence) const{
+    int count = subsequence.GetLength();
     if (count == 0) return 0;
     
     for (int i = 0;i <= length - count; i++){
-        if (Get(i)==subsequence.Get(0)){
+        if (GetItem(i)==subsequence.GetItem(0)){
             int f=1;
             for(int j=i+1; j<i+count; j++){
-                if(Get(j)!=subsequence.Get(f)) break;
+                if(GetItem(j)!=subsequence.GetItem(f)) break;
                 f++;
             }
             if (f==count) return i;
@@ -626,7 +625,7 @@ int SegmentedDeque<T>::FindSubsequence(const ICollection<T>& subsequence) const{
 
 template<class T> 
 SegmentedDeque<T>* SegmentedDeque<T>::Merge(
-    const ICollection<T>& other,
+    const SegmentedDeque<T>& other,
     bool (*compare)(T, T)
 )const{
     if (compare == nullptr)   throw InvalidArgument("Function cannot be null");
@@ -638,17 +637,11 @@ SegmentedDeque<T>* SegmentedDeque<T>::Merge(
 }
 
 template<class T>
-T SegmentedDeque<T>::operator[](int index) const
-{
-  return Get(index);
-}
-
-template<class T>
 bool SegmentedDeque<T>::operator==(const SegmentedDeque<T>& other) const
 {
     if(length == other.GetLength()){
         for (int i = 0; i<length; i++){
-            if (Get(i)!=other.Get(i)) return false;
+            if (GetItem(i)!=other.GetItem(i)) return false;
         }
         return true;
     }

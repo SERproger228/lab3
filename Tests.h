@@ -10,8 +10,7 @@ void TestPopFront();
 void TestPopFrontEmpty();
 void TestPopBackEmpty();
 
-void TestsGet();
-void TestsSet();
+void TestsInternalItemAccess();
 
 void TestCopyConstructor();
 void TestAssignmentOperator();
