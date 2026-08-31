@@ -26,12 +26,15 @@ private:
 
     class Segment
     {
+        friend class SegmentedDequeTestAccess<T>;
+
     private:
         DynamicArray<T>* data;
 
         int first;
         int count;
         int capacity;
+        bool firstPrepared;
    public:
         explicit Segment(int segmentSize);
 

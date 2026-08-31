@@ -49,4 +49,20 @@ public:
     {
         return deque.segments->Get(index) != nullptr;
     }
+
+    static int GetSegmentFirst(
+        const SegmentedDeque<T>& deque,
+        int index
+    )
+    {
+        return deque.segments->Get(index)->first;
+    }
+
+    static int GetSegmentCount(
+        const SegmentedDeque<T>& deque,
+        int index
+    )
+    {
+        return deque.segments->Get(index)->count;
+    }
 };

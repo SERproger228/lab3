@@ -29,5 +29,9 @@ void TestInitialInternalState();
 void TestInternalIndexesAfterPushes();
 void TestInternalIndexesAfterPops();
 void TestInternalExpansionKeepsCenteredSegments();
+void TestFirstPushBackKeepsInitialSegmentCentered();
+void TestFirstPushFrontKeepsInitialSegmentCentered();
+void TestNewEdgeSegmentsKeepTheirFillDirection();
+void TestCenteringAfterDequeBecomesEmpty();
 
 void RunAllTests();

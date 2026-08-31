@@ -13,6 +13,7 @@ SegmentedDeque<T>::Segment::Segment(int segmentSize)
     capacity = segmentSize;
     count = 0;
     first = 0;
+    firstPrepared = false;
 
     data = new DynamicArray<T>(capacity);
 }
@@ -23,6 +24,7 @@ SegmentedDeque<T>::Segment::Segment(const Segment& other)
     capacity = other.capacity;
     first = other.first;
     count = other.count;
+    firstPrepared = other.firstPrepared;
 
     data = new DynamicArray<T>(capacity);
 
@@ -42,6 +44,7 @@ void SegmentedDeque<T>::Segment::MoveFirstToMid(){
         throw InvalidArgument("Cannot move start of a non-empty segment");
     }
     first = capacity/2;
+    firstPrepared = true;
 };
 
 template<class T>
@@ -115,12 +118,18 @@ void SegmentedDeque<T>::Segment::PushFront(T item)
         throw InvalidArgument("Cannot push front into segment");
 
     if (count == 0)
-        first = capacity - 1;
+    {
+        if (!firstPrepared)
+            first = capacity - 1;
+    }
     else
+    {
         first--;
+    }
 
     data->Set(first, item);
     count++;
+    firstPrepared = false;
 }
 
 template<class T>
@@ -131,7 +140,8 @@ void SegmentedDeque<T>::Segment::PushBack(T item)
 
     if (count == 0)
     {
-        first = 0;
+        if (!firstPrepared)
+            first = 0;
         data->Set(first, item);
     }
     else
@@ -140,6 +150,7 @@ void SegmentedDeque<T>::Segment::PushBack(T item)
     }
 
     count++;
+    firstPrepared = false;
 }
 
 template<class T>
