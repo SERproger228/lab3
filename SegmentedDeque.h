@@ -48,16 +48,10 @@ private:
         bool CanPushFront() const;
         bool CanPushBack() const;
 
-        int GetCount() const;
-
         void MoveFirstToMid();
-
-        T At(int index) const;
 
         T GetFirst() const;
         T GetLast() const;
-
-        void Put(T item, int index);
 
         void PushFront(T item);
         void PushBack(T item);
@@ -94,9 +88,6 @@ private:
     void EnsureFrontSegmentsCapacity();
     void EnsureBackSegmentsCapacity();
 
-    T GetItem(int index) const;
-    void SetItem(T item, int index);
-
 public:
 
     explicit SegmentedDeque(
@@ -132,7 +123,6 @@ public:
     T GetLast() const;
 
     int GetLength() const;
-    int GetCount() const { return GetLength(); }
 
     bool IsEmpty() const;
 

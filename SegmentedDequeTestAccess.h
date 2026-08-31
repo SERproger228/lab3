@@ -66,11 +66,4 @@ public:
         return deque.segments->Get(index)->count;
     }
 
-    static T GetItem(
-        const SegmentedDeque<T>& deque,
-        int index
-    )
-    {
-        return deque.GetItem(index);
-    }
 };

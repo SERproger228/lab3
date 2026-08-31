@@ -71,21 +71,6 @@ bool SegmentedDeque<T>::Segment::CanPushBack() const
 }
 
 template<class T>
-int SegmentedDeque<T>::Segment::GetCount() const
-{
-    return count;
-}
-
-template<class T>
-T SegmentedDeque<T>::Segment::At(int index) const
-{
-    if (index < 0 || index >= count)
-        throw IndexOutOfRange();
-
-    return data->Get(first + index);
-}
-
-template<class T>
 T SegmentedDeque<T>::Segment::GetFirst() const
 {
     if (IsEmpty())
@@ -101,13 +86,6 @@ T SegmentedDeque<T>::Segment::GetLast() const
         throw InvalidArgument("Segment is empty");
 
     return data->Get(first + count - 1);
-}
-
-template<class T>
-void SegmentedDeque<T>::Segment::Put(T item, int index){
-   if (index<0 || index>=count) throw IndexOutOfRange();
-
-   data->Set(first + index, item);
 }
 
 template<class T>
@@ -450,37 +428,6 @@ T SegmentedDeque<T>::GetLast() const
 }
 
 template<class T>
-T SegmentedDeque<T>::GetItem(int index) const
-{
-    if (index < 0 || index >= length)
-        throw IndexOutOfRange();
-
-    Segment* frontSegment = GetFrontSegment();
-    if (index < frontSegment->GetCount()) return frontSegment->At(index);
-    index = index - frontSegment->GetCount();
-    int segmentIndex = frontSegmentIndex + index / segmentSize + 1;
-    int getIndex = index % segmentSize;
-    return segments->Get(segmentIndex)->At(getIndex);
-
-}
-
-template<class T>
-void SegmentedDeque<T>::SetItem(T item, int index){
-    if (index < 0 || index >= length) throw IndexOutOfRange(); 
-    
-    Segment* frontSegment = GetFrontSegment();
-    if (index < frontSegment->GetCount()){
-        frontSegment->Put(item, index);
-        return;
-    }
-    index -= frontSegment->GetCount();
-    int setSegmentIndex = frontSegmentIndex + index/segmentSize + 1;
-    int setIndex = index % segmentSize; 
-    Segment* segment = segments->Get(setSegmentIndex);
-    segment->Put(item, setIndex);
-}
-
-template<class T>
 int SegmentedDeque<T>::GetLength() const
 {
     return length;
@@ -499,8 +446,9 @@ SegmentedDeque<T>::Concat(
 ) const
 {
    SegmentedDeque<T>* result = new SegmentedDeque<T>(*this);
-   for (int i=0; i<other.GetLength(); i++)
-      result->PushBack(other.GetItem(i));
+   SegmentedDeque<T> source(other);
+   while (!source.IsEmpty())
+      result->PushBack(source.PopFront());
    
    return result;
 }
@@ -518,8 +466,12 @@ SegmentedDeque<T>::GetSubsequence(
     SegmentedDeque<T>* result =
         new SegmentedDeque<T>(segmentSize, backing);
 
+    SegmentedDeque<T> source(*this);
+    for (int i = 0; i < startIndex; i++)
+        source.PopFront();
+
     for (int i = startIndex; i <= endIndex; i++)
-        result->PushBack(GetItem(i));
+        result->PushBack(source.PopFront());
 
     return result;
 }
@@ -536,8 +488,9 @@ SegmentedDeque<T>::Map(
     SegmentedDeque<T>* result =
         new SegmentedDeque<T>(segmentSize, backing);
 
-    for (int i = 0; i < length; i++)
-        result->PushBack(function(GetItem(i)));
+    SegmentedDeque<T> source(*this);
+    while (!source.IsEmpty())
+        result->PushBack(function(source.PopFront()));
 
     return result;
 }
@@ -554,9 +507,10 @@ SegmentedDeque<T>::Where(
     SegmentedDeque<T>* result =
         new SegmentedDeque<T>(segmentSize, backing);
 
-    for (int i = 0; i < length; i++)
+    SegmentedDeque<T> source(*this);
+    while (!source.IsEmpty())
     {
-        T item = GetItem(i);
+        T item = source.PopFront();
 
         if (predicate(item))
             result->PushBack(item);
@@ -576,8 +530,9 @@ T SegmentedDeque<T>::Reduce(
 
     T result = initial;
 
-    for (int i = 0; i < length; i++)
-        result = function(GetItem(i), result);
+    SegmentedDeque<T> source(*this);
+    while (!source.IsEmpty())
+        result = function(source.PopFront(), result);
 
     return result;
 }
@@ -591,16 +546,28 @@ SegmentedDeque<T>::Sort(
         if (compare == nullptr)
         throw InvalidArgument("Function cannot be null");
 
-        SegmentedDeque<T>* result = new SegmentedDeque<T>(*this);
-        for (int i = 0; i<length-1; i++){
-            for(int j=0; j<length-1-i; j++){
-                if(compare(result->GetItem(j+1), result->GetItem(j))){
-                    T copy = result->GetItem(j+1);
-                    
-                    result->SetItem(result->GetItem(j), j+1);
-                    result->SetItem(copy, j);
-                    }
+        SegmentedDeque<T>* result = new SegmentedDeque<T>(segmentSize, backing);
+        SegmentedDeque<T> source(*this);
+
+        while (!source.IsEmpty()) {
+            T item = source.PopFront();
+            SegmentedDeque<T>* next = new SegmentedDeque<T>(segmentSize, backing);
+            bool inserted = false;
+
+            while (!result->IsEmpty()) {
+                T current = result->PopFront();
+                if (!inserted && compare(item, current)) {
+                    next->PushBack(item);
+                    inserted = true;
+                }
+                next->PushBack(current);
             }
+
+            if (!inserted)
+                next->PushBack(item);
+
+            delete result;
+            result = next;
         }
         return result;
 }
@@ -610,15 +577,20 @@ int SegmentedDeque<T>::FindSubsequence(const SegmentedDeque<T>& subsequence) con
     int count = subsequence.GetLength();
     if (count == 0) return 0;
     
-    for (int i = 0;i <= length - count; i++){
-        if (GetItem(i)==subsequence.GetItem(0)){
-            int f=1;
-            for(int j=i+1; j<i+count; j++){
-                if(GetItem(j)!=subsequence.GetItem(f)) break;
-                f++;
+    for (int i = 0; i <= length - count; i++){
+        SegmentedDeque<T> source(*this);
+        SegmentedDeque<T> pattern(subsequence);
+        for (int skip = 0; skip < i; skip++)
+            source.PopFront();
+
+        bool found = true;
+        while (!pattern.IsEmpty()) {
+            if (source.PopFront() != pattern.PopFront()) {
+                found = false;
+                break;
             }
-            if (f==count) return i;
         }
+        if (found) return i;
     }
     return -1;
 }
@@ -640,8 +612,10 @@ template<class T>
 bool SegmentedDeque<T>::operator==(const SegmentedDeque<T>& other) const
 {
     if(length == other.GetLength()){
-        for (int i = 0; i<length; i++){
-            if (GetItem(i)!=other.GetItem(i)) return false;
+        SegmentedDeque<T> left(*this);
+        SegmentedDeque<T> right(other);
+        while (!left.IsEmpty()){
+            if (left.PopFront()!=right.PopFront()) return false;
         }
         return true;
     }
