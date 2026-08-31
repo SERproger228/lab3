@@ -1,0 +1,14 @@
+#ifndef ICOLLECTION_H
+#define ICOLLECTION_H
+
+template<class T>
+class ICollection
+{
+public:
+    virtual T Get(int index) const = 0;
+    virtual int GetCount() const = 0;
+
+    virtual ~ICollection() = default;
+};
+
+#endif
